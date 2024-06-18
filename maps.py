@@ -57,6 +57,19 @@ class InputMap():
 
         return map_2d
     
+    def get_2d_beam(self, beam_function, *args):
+
+        npix_x = self.ra.size
+        npix_y = self.dec.size
+
+        x = np.linspace(-(npix_x//2), npix_x//2, npix_x)
+        y = np.linspace(-(npix_y//2), npix_y//2, npix_y)
+        xx, yy = np.meshgrid(x, y)
+        r = np.sqrt(xx**2 + yy**2)
+
+        beam = beam_function(r, *args)
+
+        return beam/np.max(beam)
 
     def get_1d_map(self, nside, map_2d):
 
@@ -70,6 +83,7 @@ class InputMap():
         
         return map_1d
     
+
 
     def observe(self, map_2d, telescope_beam, noise_std=1e-2, add_noise=True):
         '''adds instrumental effects
@@ -89,14 +103,45 @@ class InputMap():
 
 
 
-def gaussian_beam(npix_x, npix_y, std):
+class GaussianBeam():
 
-    x = np.linspace(-(npix_x//2), npix_x//2, npix_x)
-    y = np.linspace(-(npix_y//2), npix_y//2, npix_y)
+    def __init__(self, npix_x, npix_y, std):
+        
+        self.npix_x = npix_x
+        self.npix_y = npix_y
+        self.std = std
 
-    xx, yy = np.meshgrid(y, x)
+    def get_2d_beam(self):
 
-    r = np.sqrt(xx**2 + yy**2)
+        x = np.linspace(-(self.npix_x//2), self.npix_x//2, self.npix_x)
+        y = np.linspace(-(self.npix_y//2), self.npix_y//2, self.npix_y)
+
+        xx, yy = np.meshgrid(y, x)
+
+        r = np.sqrt(xx**2 + yy**2)
+
+        beam = np.exp(-r**2 / (2*self.std**2))
+
+        self.beam2d = beam/np.max(beam)
+
+        return beam/np.max(beam)
+    
+    def get_1d_beam(self, nside, beam2d):
+
+        npix = hp.nside2npix(nside)
+        beam_1d = np.zeros(npix)
+
+        for i in range(self.ra.size):
+            for j in range(self.dec.size):
+                pix = hp.ang2pix(nside, self.ra[i], self.dec[j], lonlat=True)
+                map_1d[pix] = map_2d[j, i]
+        
+        return map_1d
+
+
+    
+
+def gaussian_beam(r, std):
 
     beam = np.exp(-r**2 / (2*std**2))
 
@@ -152,28 +197,3 @@ def perform_observation(map, telescope_beam=None):
         map_observed = np.fft.fftshift(np.fft.ifft(np.fft.fft(beam) * np.fft.fft(map)))
 
     return np.real(map_observed)
-
-def add_noise(map, noise_std, seed=0):
-
-    np.random.seed(seed)
-    noisy_map = map + np.random.normal(loc=0, scale=noise_std, size=map.size)
-
-    return noisy_map
-
-
-class GaussianBeam():
-
-    def __init__(self, npix=10, std=10):
-        
-        self.std = std
-        self.npix = npix
-
-    def get_beam(self, npix):
-
-        x = np.linspace(-(npix//2), npix//2, npix)
-        beam = np.exp(-x**2 / (2*self.std**2))
-
-        return beam
-    
-
-BEAMS = {'gaussian': GaussianBeam()}
