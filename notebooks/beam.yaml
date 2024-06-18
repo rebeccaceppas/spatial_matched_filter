@@ -1,0 +1,66 @@
+config:
+    output_directory:   /home/rebeccac/scratch/spatial_matched_filter/   # Change this to where you want to save your data products!
+
+    # Cluster configuration (ignored unless on a cluster)
+    name:               beam_64_dec45        # Jobname
+    nodes:              8                   # Number of nodes to run on
+    time:               120                  # Time to run for (in minutes)
+    ompnum:             3                   # Number of OpenMP threads
+    pernode:            16
+    mem:                192000M
+
+    system:             cedar
+    queue_sys:          slurm
+    account:            rrg-kmsmith
+
+    # Specify the products to generate
+    # (only generate beam transfer matrices here)
+    beamtransfers:      Yes
+    skip_svd:           Yes
+
+    kltransform:        No
+    psfisher:           No
+
+    # Parameters for generating beam transfer matrices
+    svcut:              1e-6
+    polsvcut:           1e-6
+    mem_chunk:          1.0
+    chunk_cache_size:   256
+
+telescope:
+    type:
+        class: CHORD64Survey
+        module: chord_pipeline.core.telescope
+
+    freq_start: 1420.0
+    freq_end: 1419.0
+    num_freq: 2
+
+    elevation_start: -4.32
+    elevation_stop: -4.32
+    npointings: 1
+
+    auto_correlation: No
+    tsys_flat: 30.0
+    ndays: 1
+
+    min_u: 6.0
+    min_v: 6.0
+
+    skip_pol: No
+    skip_V: No
+
+    beam_cache_size: 1000
+
+    layout_spec:
+        type: "grid"
+        grid_ew: 11
+        grid_ns: 6
+        spacing_ew: 6.3
+        spacing_ns: 9.0
+
+    beam_spec:
+      type: "airy"
+      diameter: 6.0
+      crosspol_type: "pure"
+      crosspol_scale_dB: -60.0
