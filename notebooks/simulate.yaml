@@ -32,21 +32,21 @@ pipeline:
   - type: draco.core.io.LoadProductManager
     out: manager
     params:
-      product_directory: /home/rebeccac/scratch/spatial_matched_filter
+      product_directory: /home/rebeccac/scratch/beam_64_dec45
   - type: draco.core.io.LoadMaps
     out: map
     params:
       maps:
       - tag: HIgalaxies
         files:
-        - /home/rebeccac/scratch/spatial_matched_filter/input.h5
+        - /home/rebeccac/scratch/spatial_matched_filter/notebooks/input.h5
   - type: draco.synthesis.stream.SimulateSidereal
     requires: manager
     in: map
     out: sstack
     params:
       save: true
-      output_name: /home/rebeccac/scratch/spatial_matched_filter/sstream.h5
+      output_name: /home/rebeccac/scratch/spatial_matched_filter/notebooks/sstream.h5
   - type: draco.analysis.transform.MModeTransform
     requires: manager
     in: sstack
@@ -58,5 +58,5 @@ pipeline:
     params:
       nside: 64
       save: true
-      output_name: /home/rebeccac/scratch/spatial_matched_filter/dirty_map.h5
+      output_name: /home/rebeccac/scratch/spatial_matched_filter/notebooks/dirty_map.h5
       
