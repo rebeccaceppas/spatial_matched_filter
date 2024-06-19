@@ -79,7 +79,7 @@ class InputMap():
         for i in range(self.ra.size):
             for j in range(self.dec.size):
                 pix = hp.ang2pix(nside, self.ra[i], self.dec[j], lonlat=True)
-                map_1d[pix] = map_2d[j, i]
+                map_1d[pix] += map_2d[j, i]
         
         return map_1d
     
