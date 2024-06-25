@@ -4,14 +4,16 @@ import healpy as hp
 
 class InputMap():
 
-    def __init__(self, ra_max, ra_min, dec_max, dec_min, nsources=1, resolution=1):
+    def __init__(self, ra_max, ra_min, dec_max, dec_min, nsources=1, resolution=1, seed=1):
         
         self.nsources = nsources
         self.ra_max = ra_max
         self.ra_min = ra_min
         self.dec_max = dec_max
         self.dec_min = dec_min
-        self.resolution = resolution  # resolution in astropy units
+        self.resolution = resolution  # resolution in degrees
+        self.seed = seed
+
 
     @property
     def ra(self):
@@ -34,6 +36,7 @@ class InputMap():
         pix_y = np.arange(ndec)
 
         map_2d = np.zeros((ndec, nra))
+        np.random.seed(self.seed)
 
         if locations is None:
             xx = np.array(np.random.uniform(low=pix_x.min(), 
@@ -72,7 +75,7 @@ class InputMap():
         return beam/np.max(beam)
 
     def get_1d_map(self, nside, map_2d):
-
+        
         npix = hp.nside2npix(nside)
         map_1d = np.zeros(npix)
 
@@ -84,13 +87,38 @@ class InputMap():
         return map_1d
     
 
+    
+    def get_2d_from_1d(self, map_1d):
+
+        nside = hp.npix2nside(map_1d.size)
+        ra_grid, dec_grid = np.meshgrid(self.ra, self.dec)
+
+        theta = np.radians(90.0 - dec_grid)  # Declination to colatitude
+        phi = np.radians(ra_grid)  # Right Ascension
+
+        indices = hp.ang2pix(nside, theta, phi)
+
+        map_2d = map_1d[indices]
+
+        return map_2d
+
+
+
+
+
+        
+         
+
+
 
     def observe(self, map_2d, telescope_beam, noise_std=1e-2, add_noise=True):
         '''adds instrumental effects
         
         telescope beam is an array of the beam of the same shape as map_2d'''
 
-        map_observed = np.fft.fftshift(
+        np.random.seed(self.seed)
+
+        map_observed = np.fft.ifftshift(
             np.fft.ifft2(
                 np.fft.fft2(telescope_beam) * np.fft.fft2(map_2d)
             ))
